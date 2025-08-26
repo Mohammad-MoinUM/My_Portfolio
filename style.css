@@ -1,6 +1,4 @@
-/* =========================
-   GENERAL / BASE
-========================= */
+
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,9 +19,7 @@ a:hover {
   text-decoration-color: rgb(181, 181, 181);
 }
 
-/* =========================
-   DESKTOP NAV
-========================= */
+
 #desktop-nav, #desktop-nav .nav-links { display: flex; }
 #desktop-nav {
   justify-content: space-around;
@@ -39,9 +35,6 @@ a:hover {
 .logo { font-size: 2rem; }
 .logo:hover { cursor: default; }
 
-/* =========================
-   HAMBURGER (MOBILE) NAV
-========================= */
 #hamburger-nav {
   display: none;           /* shown in media query */
   justify-content: space-around;
@@ -60,7 +53,7 @@ a:hover {
   transition: all 0.3s ease-in-out;
 }
 
-/* Dropdown (closed by default) */
+
 .menu-links {
   position: absolute; top: 100%; right: 0;
   background-color: white;
@@ -76,21 +69,19 @@ a:hover {
   font-size: 1.2rem; color: black;
 }
 
-/* toggleMenu() adds .open */
+
 .menu-links.open { max-height: 300px; }
 
 .hamburger-icon.open span:first-child { transform: rotate(45deg) translate(10px, 5px); }
 .hamburger-icon.open span:nth-child(2) { opacity: 0; }
 .hamburger-icon.open span:last-child  { transform: rotate(-45deg) translate(10px, -5px); }
 
-/* reset when closed */
+
 .hamburger-icon span:first-child,
 .hamburger-icon span:last-child { transform: none; }
 .hamburger-icon span:nth-child(2) { opacity: 1; }
 
-/* =========================
-   SECTIONS (shared)
-========================= */
+
 section {
   padding-top: 4vh;
   height: 96vh;              /* desktop feel */
@@ -98,19 +89,17 @@ section {
   min-height: fit-content;
 }
 
-/* Containers inside sections that need row layout */
+
 .section-container { display: flex; gap: 4rem; height: 80%; }
 
-/* Titles & text */
+
 .title { font-size: 3rem; text-align: center; }
 .section__text { align-self: center; text-align: center; }
 .section__text p { font-weight: 600; }
 .section__text__p1 { text-align: center; }
 .section__text__p2 { font-size: 1.75rem; margin-bottom: 1rem; }
 
-/* =========================
-   PROFILE (Hero)
-========================= */
+
 #profile {
   display: flex;
   justify-content: center;
@@ -118,7 +107,7 @@ section {
   height: 80vh;
 }
 
-/* IMPORTANT: scope the picture sizes per section */
+
 #profile .section__pic-container {
   display: flex;
   height: 400px;
@@ -128,7 +117,7 @@ section {
   overflow: hidden;
 }
 
-/* About’s picture should be fluid */
+
 #about .section__pic-container { width: 400px; max-width: 100%; }
 .about-pic { width: 100%; height: auto; border-radius: 2rem; }
 
@@ -137,18 +126,14 @@ section {
   margin-top: 1rem; gap: 1rem;
 }
 
-/* =========================
-   ICONS
-========================= */
+
 .icon { cursor: pointer; height: 2rem; }
 .icon.arrow {
   position: absolute;
   right: -5rem; bottom: 2.5rem;
 }
 
-/* =========================
-   BUTTONS
-========================= */
+
 .btn-container { display: flex; justify-content: center; gap: 1rem; }
 
 .btn {
@@ -163,9 +148,7 @@ section {
 .btn-color-2 { background: none; }
 .btn-color-2:hover { border: rgb(255, 255, 255) 0.1rem solid; }
 
-/* =========================
-   ABOUT
-========================= */
+
 #about { position: relative; }
 
 .about-containers,
