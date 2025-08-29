@@ -6,6 +6,14 @@
 html { scroll-behavior: smooth; }
 
 body { font-family: "Poppins", sans-serif; color: #000; background: #fff; }
+/* Dark mode */
+.dark body, .dark { background: #0f1115; color: #e6e6e6; }
+.dark a { color: #e6e6e6; }
+.dark .details-container, .dark .color-container, .dark .contact-info-upper-container { background: #151923; border-color: #2b3140; }
+.dark .project-title, .dark p { color: #c7c7c7; }
+.dark .btn { border-color: #3a4154; }
+.dark .btn-color-1, .dark .btn-color-2:hover { background: #2b3140; color: #e6e6e6; }
+.dark .menu-links { background: #151923; }
 
 p { color: rgb(85, 85, 85); }
 
@@ -98,6 +106,10 @@ section {
 .section__text p { font-weight: 600; }
 .section__text__p1 { text-align: center; }
 .section__text__p2 { font-size: 1.75rem; margin-bottom: 1rem; }
+.fade-in { animation: fadeIn .35s ease-in forwards; }
+.fade-out { animation: fadeOut .25s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-6px); } }
 
 
 #profile {
@@ -210,7 +222,17 @@ article .icon { cursor: default; }
   aspect-ratio: 16/10; object-fit: cover;
 }
 
-.project-title { margin: 1rem; color: black; }
+.project-title {
+  margin: 1rem 1rem 0.5rem;
+  color: black;
+}
+
+.project-description {
+  margin: 0 1rem 1rem;
+  color: #555;
+  font-size: 0.9rem;
+  text-align: center;
+}
 .project-btn { color: black; border-color: rgb(163, 163, 163); }
 
 /* =========================
