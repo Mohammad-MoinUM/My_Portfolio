@@ -419,6 +419,18 @@ if ($edu_res = mysqli_query($conn, $edu_sql)) {
           <?php endforeach; ?>
         <?php endif; ?>
       </div>
+      
+      <div class="contact-form-section">
+        <div class="contact-form-intro">
+          <h3>Send me a message</h3>
+          <p>Have a question or want to work together? Fill out the form below and I'll get back to you as soon as possible.</p>
+        </div>
+        <div class="contact-form-actions">
+          <a href="contact.php" class="btn btn-color-1">
+            <i class="fas fa-envelope"></i> Send Message
+          </a>
+        </div>
+      </div>
     </section>
     <footer>
       <p>Copyright &#169; 2023 Mohammad Moin. All Rights Reserved. <a href="login.php" style="font-size: 0.8rem; margin-left: 10px;">Admin Login</a></p>

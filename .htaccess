@@ -1,0 +1,5 @@
+DirectoryIndex index.php index.html
+
+# Redirect index.html to index.php
+RewriteEngine On
+RewriteRule ^index\.html$ index.php [L,R=301]
