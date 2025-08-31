@@ -2,18 +2,43 @@
 // Initialize the session
 session_start();
 
+// Include config file first
+require_once "config/config.php";
+
 // Check if the user is already logged in, if yes then redirect to dashboard
 if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
     header("location: admin/dashboard.php");
     exit;
 }
 
-// Include config file
-require_once "config/config.php";
-
-// Generate CSRF token
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Check for remember me cookie
+if (!isset($_SESSION["loggedin"]) && isset($_COOKIE['remember_token'])) {
+    $token = $_COOKIE['remember_token'];
+    
+    // Check if token exists in database
+    $check_token_sql = "SELECT id, username FROM users WHERE remember_token = ?";
+    if ($stmt = mysqli_prepare($conn, $check_token_sql)) {
+        mysqli_stmt_bind_param($stmt, "s", $token);
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_store_result($stmt);
+            if (mysqli_stmt_num_rows($stmt) == 1) {
+                mysqli_stmt_bind_result($stmt, $id, $username);
+                if (mysqli_stmt_fetch($stmt)) {
+                    // Token is valid, log user in
+                    session_regenerate_id(true);
+                    $_SESSION["loggedin"] = true;
+                    $_SESSION["id"] = $id;
+                    $_SESSION["username"] = $username;
+                    $_SESSION["login_time"] = time();
+                    $_SESSION["user_agent"] = $_SERVER['HTTP_USER_AGENT'];
+                    
+                    header("location: admin/dashboard.php");
+                    exit;
+                }
+            }
+        }
+        mysqli_stmt_close($stmt);
+    }
 }
 
 // Rate limiting
@@ -41,100 +66,97 @@ $username_err = $password_err = $login_err = "";
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST" && !isset($error_message)){
     
-    // Verify CSRF token
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        $login_err = "Invalid request. Please try again.";
-    } else {
+    // Check if username is empty
+    if(empty(trim($_POST["username"]))){
+        $username_err = "Please enter username.";
+    } else{
+        $username = trim($_POST["username"]);
+    }
+    
+    // Check if password is empty
+    if(empty(trim($_POST["password"]))){
+        $password_err = "Please enter your password.";
+    } else{
+        $password = trim($_POST["password"]);
+    }
+    
+    // Validate credentials
+    if(empty($username_err) && empty($password_err)){
         
-        // Check if username is empty
-        if(empty(trim($_POST["username"]))){
-            $username_err = "Please enter username.";
-        } else{
-            $username = trim($_POST["username"]);
-        }
-        
-        // Check if password is empty
-        if(empty(trim($_POST["password"]))){
-            $password_err = "Please enter your password.";
-        } else{
-            $password = trim($_POST["password"]);
-        }
-        
-        // Validate credentials
-        if(empty($username_err) && empty($password_err)){
+        // Check rate limiting
+        if (isset($_SESSION[$rate_limit_key]) && $_SESSION[$rate_limit_key]['count'] >= $max_attempts) {
+            $login_err = "Too many login attempts. Please try again later.";
+        } else {
             
-            // Check rate limiting
-            if (isset($_SESSION[$rate_limit_key]) && $_SESSION[$rate_limit_key]['count'] >= $max_attempts) {
-                $login_err = "Too many login attempts. Please try again later.";
-            } else {
+            // Prepare a select statement
+            $sql = "SELECT id, username, password FROM users WHERE username = ?";
+            
+            if($stmt = mysqli_prepare($conn, $sql)){
+                // Bind variables to the prepared statement as parameters
+                mysqli_stmt_bind_param($stmt, "s", $param_username);
                 
-                // Prepare a select statement
-                $sql = "SELECT id, username, password FROM users WHERE username = ?";
+                // Set parameters
+                $param_username = $username;
                 
-                if($stmt = mysqli_prepare($conn, $sql)){
-                    // Bind variables to the prepared statement as parameters
-                    mysqli_stmt_bind_param($stmt, "s", $param_username);
+                // Attempt to execute the prepared statement
+                if(mysqli_stmt_execute($stmt)){
+                    // Store result
+                    mysqli_stmt_store_result($stmt);
                     
-                    // Set parameters
-                    $param_username = $username;
-                    
-                    // Attempt to execute the prepared statement
-                    if(mysqli_stmt_execute($stmt)){
-                        // Store result
-                        mysqli_stmt_store_result($stmt);
-                        
-                        // Check if username exists, if yes then verify password
-                        if(mysqli_stmt_num_rows($stmt) == 1){                    
-                            // Bind result variables
-                            mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password);
-                            if(mysqli_stmt_fetch($stmt)){
-                                if(password_verify($password, $hashed_password)){
-                                    // Password is correct, so start a new session
-                                    session_regenerate_id(true); // Prevent session fixation
+                    // Check if username exists, if yes then verify password
+                    if(mysqli_stmt_num_rows($stmt) == 1){                    
+                        // Bind result variables
+                        mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password);
+                        if(mysqli_stmt_fetch($stmt)){
+                            if(password_verify($password, $hashed_password)){
+                                // Password is correct, so start a new session
+                                session_regenerate_id(true); // Prevent session fixation
+                                
+                                // Store data in session variables
+                                $_SESSION["loggedin"] = true;
+                                $_SESSION["id"] = $id;
+                                $_SESSION["username"] = $username;
+                                $_SESSION["login_time"] = time();
+                                $_SESSION["user_agent"] = $_SERVER['HTTP_USER_AGENT'];
+                                
+                                // Clear rate limiting
+                                unset($_SESSION[$rate_limit_key]);
+                                
+                                // Set secure cookies for remember me
+                                if (isset($_POST['remember_me'])) {
+                                    $token = bin2hex(random_bytes(32));
+                                    setcookie('remember_token', $token, time() + (86400 * 30), '/', '', false, true); // 30 days, httponly
                                     
-                                    // Store data in session variables
-                                    $_SESSION["loggedin"] = true;
-                                    $_SESSION["id"] = $id;
-                                    $_SESSION["username"] = $username;
-                                    $_SESSION["login_time"] = time();
-                                    $_SESSION["user_agent"] = $_SERVER['HTTP_USER_AGENT'];
-                                    
-                                    // Clear rate limiting
-                                    unset($_SESSION[$rate_limit_key]);
-                                    
-                                    // Set secure cookies
-                                    if (isset($_POST['remember_me'])) {
-                                        $token = bin2hex(random_bytes(32));
-                                        setcookie('remember_token', $token, time() + (86400 * 30), '/', '', true, true); // 30 days, secure, httponly
-                                        
-                                        // Store token in database (you'll need to add a remember_token column)
-                                        $update_sql = "UPDATE users SET remember_token = ? WHERE id = ?";
-                                        $update_stmt = mysqli_prepare($conn, $update_sql);
+                                    // Store token in database
+                                    $update_sql = "UPDATE users SET remember_token = ? WHERE id = ?";
+                                    $update_stmt = mysqli_prepare($conn, $update_sql);
+                                    if ($update_stmt) {
                                         mysqli_stmt_bind_param($update_stmt, "si", $token, $id);
                                         mysqli_stmt_execute($update_stmt);
+                                        mysqli_stmt_close($update_stmt);
                                     }
-                                    
-                                    // Redirect user to dashboard page
-                                    header("location: admin/dashboard.php");
-                                    exit;
-                                } else{
-                                    // Password is not valid
-                                    $login_err = "Invalid username or password.";
-                                    incrementLoginAttempts($ip, $rate_limit_key);
                                 }
+                                
+                                // Redirect user to dashboard page
+                                header("location: admin/dashboard.php");
+                                exit;
+                            } else{
+                                // Password is not valid
+                                $login_err = "Invalid username or password.";
+                                incrementLoginAttempts($ip, $rate_limit_key);
                             }
-                        } else{
-                            // Username doesn't exist
-                            $login_err = "Invalid username or password.";
-                            incrementLoginAttempts($ip, $rate_limit_key);
                         }
                     } else{
-                        echo "Oops! Something went wrong. Please try again later.";
+                        // Username doesn't exist
+                        $login_err = "Invalid username or password.";
+                        incrementLoginAttempts($ip, $rate_limit_key);
                     }
-
-                    // Close statement
-                    mysqli_stmt_close($stmt);
+                } else{
+                    echo "Oops! Something went wrong. Please try again later.";
                 }
+
+                // Close statement
+                mysqli_stmt_close($stmt);
             }
         }
     }
@@ -319,21 +341,6 @@ function incrementLoginAttempts($ip, $rate_limit_key) {
             transform: translateX(-5px);
         }
         
-        .security-info {
-            background: rgba(102, 126, 234, 0.1);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-        
-        .security-info p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--dark-color);
-            opacity: 0.8;
-        }
-        
         @media (max-width: 768px) {
             .login-container {
                 margin: 1rem;
@@ -364,8 +371,6 @@ function incrementLoginAttempts($ip, $rate_limit_key) {
         ?>
 
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-            
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" class="<?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($username); ?>" required>
@@ -396,10 +401,6 @@ function incrementLoginAttempts($ip, $rate_limit_key) {
             <a href="index.php">
                 <i class="fas fa-arrow-left"></i> Back to Portfolio
             </a>
-        </div>
-        
-        <div class="security-info">
-            <p><i class="fas fa-shield-alt"></i> Secure login with rate limiting and CSRF protection</p>
         </div>
     </div>
 </body>
