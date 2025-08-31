@@ -1,5 +1,8 @@
 <?php
-require_once 'config.php';
+// Check if connection is available
+if (!isset($conn) || !$conn) {
+    die("ERROR: Database connection not available. Please run setup.php first.");
+}
 
 // Create users table with enhanced security
 $sql_users = "CREATE TABLE IF NOT EXISTS users (
@@ -17,6 +20,8 @@ $sql_users = "CREATE TABLE IF NOT EXISTS users (
 
 if (!mysqli_query($conn, $sql_users)) {
     die("ERROR: Could not create users table. " . mysqli_error($conn));
+} else {
+    echo "✓ Users table created/verified successfully.<br>";
 }
 
 // Create projects table
@@ -141,7 +146,7 @@ if (mysqli_num_rows($result) == 0) {
     }
 }
 
-// Add indexes for better performance
+// Add indexes for better performance (only after tables are confirmed to exist)
 $indexes = [
     "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
     "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
@@ -151,9 +156,25 @@ $indexes = [
     "CREATE INDEX IF NOT EXISTS idx_login_attempts_created ON login_attempts(created_at)"
 ];
 
-foreach ($indexes as $index_sql) {
-    if (!mysqli_query($conn, $index_sql)) {
-        echo "WARNING: Could not create index. " . mysqli_error($conn) . "<br>";
+// Verify tables exist before creating indexes
+$tables_to_check = ['users', 'user_sessions', 'login_attempts'];
+$tables_exist = true;
+
+foreach ($tables_to_check as $table) {
+    $check_table = "SHOW TABLES LIKE '$table'";
+    $result = mysqli_query($conn, $check_table);
+    if (mysqli_num_rows($result) == 0) {
+        echo "WARNING: Table '$table' does not exist, skipping index creation.<br>";
+        $tables_exist = false;
+        break;
+    }
+}
+
+if ($tables_exist) {
+    foreach ($indexes as $index_sql) {
+        if (!mysqli_query($conn, $index_sql)) {
+            echo "WARNING: Could not create index. " . mysqli_error($conn) . "<br>";
+        }
     }
 }
 
