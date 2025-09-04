@@ -1,32 +1,23 @@
-// Enhanced Portfolio JavaScript with Animations and Better UX
 
-// DOM Content Loaded
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all functionality
     initializePortfolio();
 });
 
 function initializePortfolio() {
-    // Initialize smooth scrolling
     initSmoothScrolling();
-    
-    // Initialize animations
+
     initAnimations();
-    
-    // Initialize dark mode
     initDarkMode();
-    
-    // Initialize loading animations
     initLoadingAnimations();
     
-    // Initialize mobile menu
     initMobileMenu();
     
-    // Initialize scroll effects
     initScrollEffects();
 }
 
-// Smooth Scrolling for Navigation Links
+
 function initSmoothScrolling() {
     const navLinks = document.querySelectorAll('a[href^="#"]');
     
