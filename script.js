@@ -214,13 +214,13 @@ function initScrollEffects() {
     const nav = document.querySelector('#desktop-nav');
     
     window.addEventListener('scroll', function() {
-        if (window.scrollY > 100) {
-            nav.style.background = 'rgba(255, 255, 255, 0.98)';
-            nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
-        } else {
-            nav.style.background = 'rgba(255, 255, 255, 0.95)';
-            nav.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        }
+        // if (window.scrollY > 100) {
+        //     nav.style.background = 'rgba(255, 255, 255, 0.98)';
+        //     nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+        // } else {
+        //     nav.style.background = 'rgba(255, 255, 255, 0.95)';
+        //     nav.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        // }
     });
     
     // Parallax effect for profile image
